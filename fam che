@@ -1,0 +1,93 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "RichKidz Hub | Chest Farm V2",
+   LoadingTitle = "Đang kiểm tra dữ liệu...",
+   LoadingSubtitle = "by Gemini AI",
+})
+
+local Tab = Window:CreateTab("Auto Farm", 4483362458)
+
+local AutoFarm = false
+local StopWhenGetItem = false
+
+Tab:CreateToggle({
+   Name = "Auto Farm",
+   CurrentValue = false,
+   Callback = function(Value)
+      AutoFarm = Value
+      if Value then
+         StartChestFarm()
+      end
+   end,
+})
+
+Tab:CreateToggle({
+   Name = "Auto Farm Until Get Item",
+   CurrentValue = false,
+   Callback = function(Value)
+      StopWhenGetItem = Value
+   end,
+})
+
+-- Hàm kiểm tra vật phẩm hiếm (Chén hoặc Fist)
+function hasRareItem()
+    local items = {"God's Chalice", "Fist of Darkness"}
+    for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+        for _, rare in pairs(items) do if item.Name == rare then return true end end
+    end
+    for _, item in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+        for _, rare in pairs(items) do if item.Name == rare then return true end end
+    end
+    return false
+end
+
+-- Hàm di chuyển Tween tốc độ ổn định tránh bị kick (250)
+function tweenTo(targetCFrame)
+    local char = game.Players.LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local dist = (targetCFrame.p - char.HumanoidRootPart.Position).Magnitude
+        local tween = game:GetService("TweenService"):Create(char.HumanoidRootPart, TweenInfo.new(dist/250, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+        tween:Play()
+        return tween
+    end
+end
+
+-- Logic chính của Script
+function StartChestFarm()
+    spawn(function()
+        while AutoFarm do
+            task.wait(0.1)
+
+            -- Tính năng đặc biệt: Tự dừng khi có đồ
+            if StopWhenGetItem and hasRareItem() then
+                AutoFarm = false
+                Rayfield:Notify({
+                   Title = "CHÚC MỪNG!",
+                   Content = "Đã nhặt được vật phẩm hiếm! Script đã tự động dừng.",
+                   Duration = 15,
+                   Image = 4483362458,
+                })
+                break
+            end
+
+            -- Tìm rương
+            local chest = nil
+            for _, v in pairs(game.Workspace:GetChildren()) do
+                if v.Name:find("Chest") and v:IsA("Part") then
+                    chest = v
+                    break
+                end
+            end
+
+            if chest then
+                local tw = tweenTo(chest.CFrame)
+                repeat task.wait() 
+                until not chest.Parent or not AutoFarm or (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - chest.Position).Magnitude < 5
+            else
+                -- Đợi rương hồi
+                task.wait(1)
+            end
+        end
+    end)
+end
