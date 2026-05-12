@@ -1,0 +1,65 @@
+--[[ 
+   SCRIPT NHẶT RƯƠNG (CHEST FARM) - NEW VERSION 2026
+   Hỗ trợ: Delta X, 
+]]
+
+_G.Config = {
+    AutoFarm = true,
+    StopOnItem = true, -- Tự động dừng khi có item mới
+    FarmSpeed = 1.3   -- Tốc độ bay (giảm xuống nếu bị kick)
+}
+
+local Player = game.Players.LocalPlayer
+local Backpack = Player.Backpack
+
+-- Hàm thông báo
+local function Notify(msg)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "System";
+        Text = msg;
+        Duration = 3;
+    })
+end
+
+-- Check đồ mới để dừng script
+Backpack.ChildAdded:Connect(function(item)
+    if _G.Config.StopOnItem and _G.Config.AutoFarm then
+        _G.Config.AutoFarm = false
+        Notify("Đã nhặt được: " .. item.Name .. ". Dừng Script!")
+    end
+end)
+
+-- Vòng lặp tìm rương
+spawn(function()
+    while _G.Config.AutoFarm do
+        task.wait(_G.Config.FarmSpeed)
+        local hasChest = false
+        
+        for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
+            if v:IsA("Model") and (v.Name:find("Chest") or v.Name:find("Rương")) then
+                local part = v:FindFirstChildWhichIsA("BasePart") or v:FindFirstChild("TouchInterest")
+                
+                if part and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                    hasChest = true
+                    -- Teleport tới rương
+                    Player.Character.HumanoidRootPart.CFrame = v:GetModelCFrame()
+                    
+                    -- Nếu game yêu cầu chạm vào rương
+                    firetouchinterest(Player.Character.HumanoidRootPart, part.Parent, 0)
+                    firetouchinterest(Player.Character.HumanoidRootPart, part.Parent, 1)
+                    
+                    task.wait(0.2) -- Đợi rương biến mất
+                end
+            end
+            if not _G.Config.AutoFarm then break end
+        end
+        
+        -- Nếu không thấy rương nào trên map
+        if not hasChest then
+            -- Bạn có thể thêm code tự đổi server ở đây nếu muốn
+            task.wait(1)
+        end
+    end
+end)
+
+Notify("Script nhặt rương đã sẵn sàng!")
