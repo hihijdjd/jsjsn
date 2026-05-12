@@ -1,0 +1,5 @@
+_G.Team = "Pirates" -- "Pirates" hoặc "Marines"
+_G.AutoStop = true -- Tự động dừng Script khi nhặt được đồ hiếm
+_G.WhiteScreen = false -- Bật để giảm lag (trắng màn hình)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-v63Bg9mBTS/main/ChestV1.lua"))()
