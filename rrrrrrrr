@@ -1,0 +1,4 @@
+_G.StopWhenGetItem = true -- Tự động dừng khi có item
+_G.ItemsToStop = {"God's Chalice", "Fist of Darkness"} -- Danh sách item nhận diện
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/GhostPlayer352/Test4/main/AutoChest"))()
