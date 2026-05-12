@@ -1,0 +1,5 @@
+_G.Team = "Pirates" -- Chọn "Pirates" hoặc "Marines"
+_G.AutoStop = true -- Tự động dừng khi có Chén Thánh hoặc Fist of Darkness
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-v63Bg9mBTS/main/ChestV1.lua"))()
+  
