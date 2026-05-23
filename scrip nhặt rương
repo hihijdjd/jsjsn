@@ -1,0 +1,104 @@
+--[[
+    Script: Auto Farm Chest & Stop on Chalice / Fist of Darkness
+    Hỗ trợ: Chạy thông qua loadstring từ GitHub
+--]]
+
+_G.AutoChest = true -- Bật/Tắt auto nhặt rương
+
+-- Hàm kiểm tra xem có Chén Thánh hoặc Core Râu Đen trong túi đồ không
+local function checkSpecialItems()
+    local player = game.Players.LocalPlayer
+    
+    -- 1. Kiểm tra trong Backpack (Túi đồ khi chưa cầm trên tay)
+    if player and player:FindFirstChild("Backpack") then
+        for _, item in pairs(player.Backpack:GetChildren()) do
+            if item.Name == "God's Chalice" or item.Name == "Fist of Darkness" then
+                print("[HỆ THỐNG] ĐÃ TÌM THẤY VẬT PHẨM: " .. item.Name .. "! DỪNG SCRIPT NGAY LẬP TỨC.")
+                _G.AutoChest = false
+                return true
+            end
+        end
+    end
+    
+    -- 2. Kiểm tra trên tay nhân vật (Nếu người chơi đang cầm vật phẩm đó)
+    local character = player.Character
+    if character then
+        for _, item in pairs(character:GetChildren()) do
+            if item:IsA("Tool") and (item.Name == "God's Chalice" or item.Name == "Fist of Darkness") then
+                print("[HỆ THỐNG] ĐÃ TÌM THẤY VẬT PHẨM TRÊN TAY: " .. item.Name .. "! DỪNG SCRIPT NGAY LẬP TỨC.")
+                _G.AutoChest = false
+                return true
+            end
+        end
+    end
+    
+    return false
+end
+
+-- Hàm tìm và dịch chuyển đến rương
+local function farmChests()
+    while _G.AutoChest do
+        task.wait(0.05) -- Tốc độ quét nhanh để phản ứng kịp thời
+        
+        -- Kiểm tra vật phẩm trước khi thực hiện hành động tiếp theo
+        if checkSpecialItems() then 
+            break 
+        end
+        
+        local character = game.Players.LocalPlayer.Character
+        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+        
+        if rootPart then
+            local targetChest = nil
+            local shortestDistance = math.huge
+            
+            -- Quét tìm rương gần nhất trong Workspace
+            for _, v in pairs(game.Workspace:GetChildren()) do
+                if v.Name:find("Chest") and v:IsA("Part") then
+                    local distance = (rootPart.Position - v.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        targetChest = v
+                    end
+                end
+            end
+            
+            -- Nếu tìm thấy rương, tiến hành dịch chuyển mượt (Tween)
+            if targetChest then
+                -- Kiểm tra lại một lần nữa trước khi bay để đảm bảo an toàn
+                if checkSpecialItems() then break end
+                
+                local tweenService = game:GetService("TweenService")
+                local tweenInfo = TweenInfo.new(shortestDistance / 350, Enum.EasingStyle.Linear) -- Tốc độ bay 350
+                local tween = tweenService:Create(rootPart, tweenInfo, {CFrame = targetChest.CFrame})
+                
+                tween:Play()
+                
+                -- Trong lúc đang bay, liên tục kiểm tra xem có nhặt được đồ giữa đường không
+                local arrived = false
+                local connection
+                connection = tween.Completed:Connect(function()
+                    arrived = true
+                end)
+                
+                while not arrived do
+                    if checkSpecialItems() then
+                        tween:Cancel() -- Hủy dịch chuyển ngay lập tức nếu nhặt được đồ
+                        if connection then connection:Disconnect() end
+                        return
+                    end
+                    task.wait(0.05)
+                end
+                
+                if connection then connection:Disconnect() end
+                task.wait(0.1) -- Chờ rương biến mất
+            else
+                -- Nếu không có rương, đợi rương hồi
+                task.wait(1)
+            end
+        end
+    end
+end
+
+-- Kích hoạt vòng lặp farm
+task.spawn(farmChests)
