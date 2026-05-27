@@ -1,0 +1,63 @@
+local Player = game.Players.LocalPlayer
+local stopFarm = false
+
+local lastChestTime = tick()
+local resetTime = 10 -- 10 giây reset
+
+-- check Chalice/Fist
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            local Backpack = Player.Backpack
+            local Character = Player.Character
+
+            if Backpack:FindFirstChild("God's Chalice")
+            or Backpack:FindFirstChild("Fist of Darkness")
+            or Character:FindFirstChild("God's Chalice")
+            or Character:FindFirstChild("Fist of Darkness") then
+
+                stopFarm = true
+                warn("Có Chalice hoặc Fist -> Dừng Farm")
+            end
+        end)
+    end
+end)
+
+-- auto reset
+task.spawn(function()
+    while task.wait(1) do
+        if stopFarm then
+            break
+        end
+
+        if tick() - lastChestTime >= resetTime then
+            Player.Character:BreakJoints()
+            lastChestTime = tick()
+        end
+    end
+end)
+
+-- tele nhặt rương
+while task.wait() do
+    if stopFarm then
+        break
+    end
+
+    pcall(function()
+        for _,v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Part") and (
+                v.Name == "Chest1"
+                or v.Name == "Chest2"
+                or v.Name == "Chest3"
+            ) then
+
+                Player.Character.HumanoidRootPart.CFrame =
+                    v.CFrame + Vector3.new(0,3,0)
+
+                lastChestTime = tick()
+
+                task.wait(0.15)
+            end
+        end
+    end)
+end
